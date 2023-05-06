@@ -1,18 +1,31 @@
-import { NAMESPACE } from '../../const';
 import { isDarkAlready } from './utils';
+import { NAMESPACE } from '../../const';
+import { getStorageKey } from '../../utils';
 
 const bgColor = getComputedStyle(document.body).backgroundColor;
 const isDarkBg = isDarkAlready(bgColor);
 
-if (!isDarkBg) {
-  document.documentElement.classList.add(NAMESPACE);
-}
+const tabKey = getStorageKey({ url: location.href });
 
-chrome.runtime.onMessage.addListener(({ type, shouldOpen }) => {
-  if (type !== NAMESPACE) return;
-  if (shouldOpen) {
+const retrieveFlagFromStorage = async () => {
+  const store = await chrome.storage.sync.get(tabKey);
+  return store[tabKey] !== 'off';
+};
+
+const changeClass = (shouldOpen) => {
+  if (shouldOpen && !isDarkBg) {
     document.documentElement.classList.add(NAMESPACE);
   } else {
     document.documentElement.classList.remove(NAMESPACE);
   }
+};
+
+retrieveFlagFromStorage().then(changeClass);
+
+chrome.runtime.onMessage.addListener(async ({ type, shouldOpen }) => {
+  if (type !== NAMESPACE) return;
+  if (typeof shouldOpen === 'undefined') {
+    shouldOpen = await retrieveFlagFromStorage();
+  }
+  changeClass(shouldOpen);
 });

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { getTab, sendTabMsg, getStorageKey } from './utils';
+import { getStorageKey } from '../../utils';
+import { NAMESPACE } from '../../const';
 import './Popup.css';
 
 const Popup = () => {
-  const [isOn, setOn] = useState(true);
+  const [isOn, setOn] = useState(undefined);
 
   const handleToggle = async () => {
     const shouldOpen = !isOn;
     setOn(shouldOpen);
 
-    getTab().then((tab) => {
+    chrome.tabs.query({ currentWindow: true, active: true }).then(([tab]) => {
       if (!tab) return;
 
       if (shouldOpen) {
@@ -18,33 +19,47 @@ const Popup = () => {
         chrome.storage.sync.set({ [getStorageKey(tab)]: 'off' });
       }
 
-      sendTabMsg(tab.id, shouldOpen);
+      chrome.tabs.sendMessage(tab.id, {
+        shouldOpen,
+        type: NAMESPACE,
+        tab,
+      });
     });
   };
 
   useEffect(() => {
-    getTab().then((tab) => {
+    chrome.tabs.query({ currentWindow: true, active: true }).then(([tab]) => {
       if (!tab) return;
 
       chrome.storage.sync.get(getStorageKey(tab), (v) => {
         const shouldOpen = v[getStorageKey(tab)] !== 'off';
-
-        if (!shouldOpen) {
-          sendTabMsg(tab.id, false);
-        }
         setOn(shouldOpen);
       });
     });
   }, []);
 
+  // const openGit = () => {
+  //   window.open(
+  //     'https://github.com/ZoeyFong/chorme_extension_dark_mode.git',
+  //     '_blank'
+  //   );
+  // };
+
   return (
     <div className="App">
       <b> Dark Mode </b>
-      <label className="switch">
-        <input type="checkbox" checked={isOn} onChange={handleToggle} />
-        <span className="slider round" />
-      </label>
+      {typeof isOn === 'undefined' ? (
+        <div className="loading" />
+      ) : (
+        <label className="switch">
+          <input type="checkbox" checked={isOn} onChange={handleToggle} />
+          <span className="slider round" />
+        </label>
+      )}
       <p className="tips">Effect on this single tab</p>
+      {/* <p className="tips" onClick={openGit}>
+        Github 🔗
+      </p> */}
     </div>
   );
 };
