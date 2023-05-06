@@ -1,9 +1,13 @@
 .App {
-  width: 80%;
-  margin: 10px auto;
+  margin: 20px 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.host {
+  font-weight: 700;
+  margin-right: 20px;
 }
 
 .switch {
@@ -11,6 +15,11 @@
   display: inline-block;
   width: 68px;
   height: 34px;
+  cursor: pointer;
+}
+
+.switch.disabled {
+  cursor: not-allowed;
 }
 
 .switch:before {
@@ -38,13 +47,12 @@
 }
 
 .switch span {
-  background-image: linear-gradient(90deg, #5c3bd0 50%, orange);
+  background-image: linear-gradient(90deg, #2649ca 50%, orange);
 }
 
 .slider {
   position: absolute;
   border-radius: 34px;
-  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
@@ -85,6 +93,5 @@ input:checked + .slider:before {
 
 .tips {
   font-size: 11px;
-  position: absolute;
-  bottom: 0;
+  margin: 0 25px 13px 25px;
 }

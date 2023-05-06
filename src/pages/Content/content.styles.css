@@ -5,6 +5,10 @@
   transition: filter 300ms;
 }
 
+.zoey_dark input {
+  color: rgb(58 58 58) !important;
+}
+
 .zoey_dark img,
 .zoey_dark video {
   filter: invert(0.9) hue-rotate(180deg) contrast(1.8) !important;

@@ -20,12 +20,16 @@ const changeClass = (shouldOpen) => {
   }
 };
 
-retrieveFlagFromStorage().then(changeClass);
-
 chrome.runtime.onMessage.addListener(async ({ type, shouldOpen }) => {
   if (type !== NAMESPACE) return;
   if (typeof shouldOpen === 'undefined') {
     shouldOpen = await retrieveFlagFromStorage();
+  } else {
+    chrome.runtime.sendMessage({
+      isDarkBg,
+      type: NAMESPACE,
+      host: location.host,
+    });
   }
   changeClass(shouldOpen);
 });

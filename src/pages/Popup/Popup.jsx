@@ -5,6 +5,8 @@ import './Popup.css';
 
 const Popup = () => {
   const [isOn, setOn] = useState(undefined);
+  const [disabled, setDisabled] = useState(false);
+  const [host, setHost] = useState('');
 
   const handleToggle = async () => {
     const shouldOpen = !isOn;
@@ -13,10 +15,11 @@ const Popup = () => {
     chrome.tabs.query({ currentWindow: true, active: true }).then(([tab]) => {
       if (!tab) return;
 
+      const tabKey = getStorageKey(tab);
       if (shouldOpen) {
-        chrome.storage.sync.remove(getStorageKey(tab));
+        chrome.storage.sync.remove(tabKey);
       } else {
-        chrome.storage.sync.set({ [getStorageKey(tab)]: 'off' });
+        chrome.storage.sync.set({ [tabKey]: 'off' });
       }
 
       chrome.tabs.sendMessage(tab.id, {
@@ -27,40 +30,57 @@ const Popup = () => {
     });
   };
 
+  const listener = ({ type, isDarkBg, host }) => {
+    if (type !== NAMESPACE) return;
+    setDisabled(isDarkBg);
+    setHost(host);
+  };
+
   useEffect(() => {
+    chrome.runtime.onMessage.addListener(listener);
+
     chrome.tabs.query({ currentWindow: true, active: true }).then(([tab]) => {
       if (!tab) return;
 
-      chrome.storage.sync.get(getStorageKey(tab), (v) => {
-        const shouldOpen = v[getStorageKey(tab)] !== 'off';
+      const tabKey = getStorageKey(tab);
+
+      chrome.storage.sync.get(tabKey, (v) => {
+        const shouldOpen = v[tabKey] !== 'off';
         setOn(shouldOpen);
+
+        chrome.tabs.sendMessage(tab.id, {
+          shouldOpen,
+          type: NAMESPACE,
+          tab,
+        });
       });
     });
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(listener);
+    };
   }, []);
 
-  // const openGit = () => {
-  //   window.open(
-  //     'https://github.com/ZoeyFong/chorme_extension_dark_mode.git',
-  //     '_blank'
-  //   );
-  // };
-
   return (
-    <div className="App">
-      <b> Dark Mode </b>
-      {typeof isOn === 'undefined' ? (
-        <div className="loading" />
-      ) : (
-        <label className="switch">
-          <input type="checkbox" checked={isOn} onChange={handleToggle} />
-          <span className="slider round" />
-        </label>
-      )}
-      <p className="tips">Effect on this single tab</p>
-      {/* <p className="tips" onClick={openGit}>
-        Github 🔗
-      </p> */}
-    </div>
+    <>
+      <div className="App">
+        <p className="host"> {host} </p>
+        {typeof isOn === 'undefined' ? (
+          <div className="loading" />
+        ) : (
+          <label className={`switch ${disabled && 'disabled'}`}>
+            <input
+              type="checkbox"
+              checked={isOn}
+              onChange={handleToggle}
+              disabled={disabled}
+            />
+            <span className="slider round" />
+          </label>
+        )}
+      </div>
+      {disabled && <p className="tips">This page has dark mode turned on</p>}
+    </>
   );
 };
 
