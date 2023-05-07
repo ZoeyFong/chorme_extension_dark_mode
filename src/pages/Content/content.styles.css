@@ -9,7 +9,10 @@
   color: rgb(58 58 58) !important;
 }
 
-.zoey_dark img,
+.zoey_dark img:not([class*='logo']) {
+  filter: invert(0.9) hue-rotate(180deg) opacity(0.92) !important;
+}
+
 .zoey_dark video {
-  filter: invert(0.9) hue-rotate(180deg) contrast(1.8) !important;
+  filter: invert(0.9) hue-rotate(180deg) !important;
 }
